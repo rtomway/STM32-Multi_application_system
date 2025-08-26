@@ -1,0 +1,5 @@
+#ifndef MAINPAGEICON_H
+#define MAINPAGEICON_H
+
+
+#endif // MAINPAGEICON_H
