@@ -1,9 +1,13 @@
 #include "alarmManager.h"
 #include "FreeRTOS.h"
 #include "logicTask/logicTask.h"
+#include "string.h"
+#include "configStorage/configStorage.h"
 
 static Alarm alarms[MAX_ALARMS];
 static uint8_t alarm_count = 0;
+
+static Config* systemConfig = NULL;
 
 /***********************************************************************************************************************
  * @author xu
@@ -12,7 +16,12 @@ static uint8_t alarm_count = 0;
  ***********************************************************************************************************************/
 void alarm_init(void)
 {
-    alarm_count = 0;
+    systemConfig=ConfigStorage_GetConfig();
+    for (int i = 0; i < systemConfig->config_alarm_count; i++)
+    {
+            alarm_count++;
+            alarms[i]=systemConfig->config_alarm[i];
+    }
 }
 
 /***********************************************************************************************************************
@@ -39,6 +48,11 @@ bool alarm_add(uint8_t hour, uint8_t minute)
 
     alarms[alarm_count].hour = hour;
     alarms[alarm_count].minute = minute;
+
+    systemConfig->config_alarm[alarm_count]=alarms[alarm_count];
+    systemConfig->config_alarm_count++;
+    ConfigStorage_Save();
+
     alarm_count++;
 
     return rtc_updateAlarm();
@@ -72,6 +86,18 @@ bool alarm_remove(uint8_t index)
         alarms[i] = alarms[i + 1];
     }
     alarm_count--;
+
+    // 更新持久化存储
+    systemConfig->config_alarm_count = alarm_count;
+    for (uint8_t i = 0; i < alarm_count; i++)
+    {
+        systemConfig->config_alarm[i] = alarms[i];
+    }
+    for (uint8_t i = alarm_count; i < systemConfig->config_alarm_count; i++)
+    {
+        memset(&systemConfig->config_alarm[i], 0, sizeof(systemConfig->config_alarm[0]));
+    }
+    ConfigStorage_Save();
 
     // 必要时更新RTC
     return (need_update) ? rtc_updateAlarm() : true;
@@ -154,7 +180,6 @@ bool rtc_alarmTimeSet(uint8_t hour, uint8_t minute)
 
     if (hal_status != HAL_OK)
     {
-        // 可以添加错误处理，如打印错误信息
         return false;
     }
 
@@ -207,15 +232,12 @@ bool rtc_updateAlarm(void)
  *  * 功能描述：RTC闹钟事件回调函数，当rtc的闹钟事件发生时，调用该函数。
  *  * 输入参数：hrtc {type}
  ***********************************************************************************************************************/
-extern TaskHandle_t logicTaskHandle;
-
 void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    // 仅发送通知，不处理状态
     xTaskNotifyFromISR(
-        logicTaskHandle, // 直接通知逻辑任务
+        logicTaskHandle, 
         (1 << 0),
         eSetBits,
         &xHigherPriorityTaskWoken);

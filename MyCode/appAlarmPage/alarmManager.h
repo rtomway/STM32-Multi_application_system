@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include "rtc.h"
 
-#define MAX_ALARMS 5
+#define MAX_ALARMS 3
 
 // 闹钟结构体
 typedef struct

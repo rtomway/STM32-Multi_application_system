@@ -4,8 +4,8 @@
 #include "menuNavPage/menuNavPage.h"
 #include "appAlarmPage/appAlarmPage.h"
 #include "systemSettingPage/systemSettingPage.h"
+#include "configStorage/configStorage.h"
 
-#include "myU8g2/myU8g2.h"
 
 
 SystemState *g_current_state = NULL;
@@ -18,6 +18,8 @@ SystemState *g_previous_state=NULL;
 *******************************************************************************/
 void systemState_init()
 {
+    ConfigStorage_Init();
+
     myU8g2_Init(&u8g2);
     u8g2_SetFont(&u8g2, u8g2_font_helvB12_tr);
 

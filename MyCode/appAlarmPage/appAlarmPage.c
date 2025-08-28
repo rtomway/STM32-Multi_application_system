@@ -4,6 +4,7 @@
 #include "alarmAddPage.h"
 #include "alarmCancelPage.h"
 #include "alarmRingPage.h"
+#include "alarmManager.h"
 
 SystemState g_appAlarmPage_state;
 SystemState* g_appAlarmPage_state_ptr = NULL;
@@ -19,6 +20,7 @@ void appAlarmPage_init()
     alarmAddPage_init();
     alarmCancelPage_init();
     alarmRingPage_init();
+    alarm_init();
 
     g_appAlarmPage_state_ptr = &g_appAlarmPage_state;
     g_appAlarmPage_state = alarm_mainPage_state;

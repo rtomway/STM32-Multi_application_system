@@ -4,6 +4,7 @@
 #include "settingsMainPage.h"
 #include "systemSettingPage.h"
 #include "stdio.h"
+#include "configStorage/configStorage.h"
 
 SystemState systemSettings_lightSetPage_state = {
     .handle_confirm = systemSettings_lightSetPage_confirm_handler,
@@ -14,11 +15,13 @@ SystemState systemSettings_lightSetPage_state = {
 };
 
 // 亮度10个层次
-static uint8_t current_brightness = 128;
+static uint8_t current_brightness;
 static uint8_t brightness_step = 5; 
 static uint8_t edit_mode = 0;    
 
 static const uint8_t step_to_brightness[11] = {10, 25, 51, 76, 102,128,153,179,204,230,255 };
+
+Config *systemConfig = NULL;
 
 /***********************************************************************************************************************
  * @author xu
@@ -27,7 +30,14 @@ static const uint8_t step_to_brightness[11] = {10, 25, 51, 76, 102,128,153,179,2
  ***********************************************************************************************************************/
 void systemSettings_lightSetPage_init()
 {
-    current_brightness = 128;
+
+    // 从配置文件中读取亮度设置
+    systemConfig = ConfigStorage_GetConfig();
+    current_brightness = systemConfig->config_brightness;
+    if (current_brightness==0)
+    {
+        current_brightness=128;
+    }
     // 根据当前亮度找到对应的步进
     for (uint8_t i = 0; i <= 10; i++)
     {
@@ -39,7 +49,7 @@ void systemSettings_lightSetPage_init()
     }
 
     edit_mode = 0;
-    u8g2_SetContrast(&u8g2, current_brightness);
+    u8g2_SetContrast(&u8g2, step_to_brightness[brightness_step]);
 }
 
 /***********************************************************************************************************************
@@ -50,7 +60,7 @@ void systemSettings_lightSetPage_init()
 void systemSettings_lightSetPage_draw()
 {
     // 实时应用亮度设置
-    u8g2_SetContrast(&u8g2, current_brightness);
+    u8g2_SetContrast(&u8g2, step_to_brightness[brightness_step]);
 
     u8g2_ClearBuffer(&u8g2);
 
@@ -122,7 +132,10 @@ void systemSettings_lightSetPage_cancle_handler()
     }
     else
     {
-        systemSettings_transPage(&systemSettings_mainPage_state);
+      //bright_value = current_brightness;
+      systemConfig->config_brightness = current_brightness;
+       ConfigStorage_Save();
+       systemSettings_transPage(&systemSettings_mainPage_state);
     }
 }
 

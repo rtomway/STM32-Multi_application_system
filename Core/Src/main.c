@@ -19,6 +19,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "crc.h"
+#include "dma.h"
 #include "i2c.h"
 #include "rtc.h"
 #include "spi.h"
@@ -26,6 +28,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "mySpi/mySpi.h"
+#include "configStorage/configStorage.h"
 
 /* USER CODE END Includes */
 
@@ -66,6 +70,7 @@ void MX_FREERTOS_Init(void);
   * @brief  The application entry point.
   * @retval int
   */
+/* uint16_t device_id = 0; */
 int main(void)
 {
 
@@ -91,11 +96,21 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_RTC_Init();
   MX_SPI1_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 
+  /*  uint8_t recv_buf[2] = {0};
+   uint8_t send_data[4] = {0x90, 0x00, 0x00, 0x00};
+
+
+   NSS_GPIO_ENTRANCE w25Q64_nss_port = {GPIOB, GPIO_PIN_0};
+
+   HAL_StatusTypeDef status = SPI_ReadData(w25Q64_nss_port, send_data, 4, recv_buf, 2, SPI_MODE_BLOCKING);
+     device_id = (recv_buf[0] << 8) | recv_buf[1]; */
   /* USER CODE END 2 */
 
   /* Init scheduler */
